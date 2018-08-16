@@ -10,7 +10,7 @@ extern crate failure;
 
 extern crate blake2_rfc;
 extern crate byteorder;
-extern crate ed25519_dalek;
+extern crate redschnorr;
 extern crate flat_tree;
 extern crate merkle_tree_stream;
 extern crate pretty_hash;
@@ -35,10 +35,11 @@ mod replicate;
 mod storage;
 
 pub use crypto::{generate_keypair, Signature};
-pub use ed25519_dalek::{PublicKey, SecretKey};
+pub use redschnorr::{PublicKey, SecretKey};
 pub use event::Event;
 pub use feed::Feed;
 pub use feed_builder::FeedBuilder;
+pub use feed::Options;
 pub use proof::Proof;
 pub use replicate::Peer;
 pub use storage::{Node, NodeTrait, Storage, Store};

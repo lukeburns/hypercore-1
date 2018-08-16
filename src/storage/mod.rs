@@ -7,7 +7,7 @@ pub use self::node::Node;
 pub use self::persist::Persist;
 pub use merkle_tree_stream::Node as NodeTrait;
 
-use ed25519_dalek::Signature;
+use redschnorr::Signature;
 use flat_tree as flat;
 use random_access_disk::{RandomAccessDisk, RandomAccessDiskMethods};
 use random_access_memory::{RandomAccessMemory, RandomAccessMemoryMethods};

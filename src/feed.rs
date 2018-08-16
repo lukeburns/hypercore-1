@@ -7,7 +7,7 @@ pub use storage::{Node, NodeTrait, Storage, Store};
 
 use bitfield::Bitfield;
 use crypto::{generate_keypair, sign, verify, Hash, Merkle};
-use ed25519_dalek::{PublicKey, SecretKey, Signature};
+use redschnorr::{Keypair, PublicKey, SecretKey, Signature};
 use flat_tree as flat;
 use pretty_hash::fmt as pretty_fmt;
 use proof::Proof;
@@ -96,7 +96,7 @@ where
 
     let hash = Hash::from_roots(self.merkle.roots());
     let index = self.length;
-    let signature = sign(&self.public_key, key, hash.as_bytes());
+    let signature = sign(key, hash.as_bytes());
     self.storage.put_signature(index, signature)?;
 
     for node in self.merkle.nodes() {
@@ -517,18 +517,46 @@ where
   }
 }
 
+#[derive(Debug)]
+pub struct Options {
+    pub secret: Option<SecretKey>,
+    pub public: Option<PublicKey>
+}
+
 impl Feed<RandomAccessDiskMethods> {
   /// Create a new instance that persists to disk at the location of `dir`.
   // TODO: Ensure that dir is always a directory.
   // NOTE: Should we `mkdirp` here?
   // NOTE: Should we call these `data.bitfield` / `data.tree`?
-  pub fn new(dir: &PathBuf) -> Result<Self> {
+  pub fn new(dir: &PathBuf, opts: Option<Options>) -> Result<Self> {
+    let builder: FeedBuilder<RandomAccessDiskMethods>;
     let storage = Storage::new_disk(&dir)?;
-    let keypair = generate_keypair(); // TODO: read keypair from disk;
-    let feed = FeedBuilder::new(keypair.public, storage)
-      .secret_key(keypair.secret)
-      .build()?;
-    Ok(feed)
+
+    if opts.is_some() {
+        let opts = opts.unwrap();
+
+        if opts.public.is_some() && !opts.secret.is_some() {
+            builder = FeedBuilder::new(opts.public.unwrap(), storage)
+        } else {
+            let keypair: Keypair;
+
+            if opts.secret.is_some() {
+                let secret = SecretKey::from_bytes(opts.secret.unwrap().as_bytes()).expect("This must be a secret key.");
+                let public = PublicKey::from_secret(&secret);
+                keypair = Keypair {
+                    secret,
+                    public
+                };
+            } else {
+                keypair = generate_keypair();
+            }
+            builder = FeedBuilder::new(keypair.public, storage).secret_key(keypair.secret);
+        }
+    } else {
+        let keypair = generate_keypair();
+        builder = FeedBuilder::new(keypair.public, storage).secret_key(keypair.secret);
+    }
+    Ok(builder.build()?)
   }
 }
 

@@ -1,4 +1,4 @@
-use ed25519_dalek::{PublicKey, SecretKey};
+use redschnorr::{PublicKey, SecretKey};
 
 use bitfield::Bitfield;
 use crypto::Merkle;

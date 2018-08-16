@@ -1,7 +1,7 @@
 //! Based on https://github.com/mafintosh/hypercore/blob/cf08d8c907e302cf4b699738f229b050eba41b59/test/compat.js
 
 extern crate data_encoding;
-extern crate ed25519_dalek;
+extern crate redschnorr;
 extern crate hypercore;
 extern crate random_access_disk;
 extern crate random_access_storage;
@@ -13,7 +13,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use data_encoding::HEXLOWER;
-use ed25519_dalek::Keypair;
+use redschnorr::Keypair;
 use hypercore::Feed;
 use hypercore::{Storage, Store};
 use random_access_disk::{RandomAccessDisk, RandomAccessDiskMethods};
@@ -60,42 +60,46 @@ fn deterministic_data_and_tree_after_replication() {
 }
 
 #[test]
+#[ignore]
 fn deterministic_signatures() {
-  let key = hex_bytes(
-    "9718a1ff1c4ca79feac551c0c7212a65e4091278ec886b88be01ee4039682238",
-  );
-  let keypair_bytes = hex_bytes(concat!(
-    "53729c0311846cca9cc0eded07aaf9e6689705b6a0b1bb8c3a2a839b72fda383",
-    "9718a1ff1c4ca79feac551c0c7212a65e4091278ec886b88be01ee4039682238"
-  ));
-
-  let expected_signatures = hex_bytes(concat!(
-    "050257010000400745643235353139000000000000000000000000000000000084684e8dd76c339",
-    "d6f5754e813204906ee818e6c6cdc6a816a2ac785a3e0d926ac08641a904013194fe6121847b7da",
-    "d4e361965d47715428eb0a0ededbdd5909d037ff3c3614fa0100ed9264a712d3b77cbe7a4f6eadd",
-    "8f342809be99dfb9154a19e278d7a5de7d2b4d890f7701a38b006469f6bab1aff66ac6125d48baf",
-    "dc0711057675ed57d445ce7ed4613881be37ebc56bb40556b822e431bb4dc3517421f9a5e3ed124",
-    "eb5c4db8367386d9ce12b2408613b9fec2837022772a635ffd807",
-  ));
-
-  for _ in 0..5 {
-    let (dir, storage) = mk_storage();
-    let keypair = mk_keypair(&keypair_bytes, &key);
-    let mut feed = Feed::builder(keypair.public, storage)
-      .secret_key(keypair.secret)
-      .build()
-      .unwrap();
-
-    let data = b"abc";
-    for &b in data {
-      feed.append(&[b]).unwrap();
-    }
-
-    assert_eq!(read_bytes(&dir, Store::Data), data);
-    assert_eq!(read_bytes(&dir, Store::Signatures), expected_signatures);
-
-    remove_dir_all(dir).unwrap()
-  }
+  // the ristretto schnorr scheme in this fork is not deterministic
+  //
+  // let key = hex_bytes(
+  //   "9718a1ff1c4ca79feac551c0c7212a65e4091278ec886b88be01ee4039682238",
+  // );
+  // let keypair_bytes = hex_bytes(concat!(
+  //   "53729c0311846cca9cc0eded07aaf9e6689705b6a0b1bb8c3a2a839b72fda383",
+  //   "9718a1ff1c4ca79feac551c0c7212a65e4091278ec886b88be01ee4039682238"
+  // ));
+  //
+  // let expected_signatures = hex_bytes(concat!(
+  //   "050257010000400745643235353139000000000000000000000000000000000084684e8dd76c339",
+  //   "d6f5754e813204906ee818e6c6cdc6a816a2ac785a3e0d926ac08641a904013194fe6121847b7da",
+  //   "d4e361965d47715428eb0a0ededbdd5909d037ff3c3614fa0100ed9264a712d3b77cbe7a4f6eadd",
+  //   "8f342809be99dfb9154a19e278d7a5de7d2b4d890f7701a38b006469f6bab1aff66ac6125d48baf",
+  //   "dc0711057675ed57d445ce7ed4613881be37ebc56bb40556b822e431bb4dc3517421f9a5e3ed124",
+  //   "eb5c4db8367386d9ce12b2408613b9fec2837022772a635ffd807",
+  // ));
+  //
+  // for _ in 0..5 {
+  //   let (dir, storage) = mk_storage();
+  //   let keypair = mk_keypair(&keypair_bytes, &key);
+  //   let mut feed = Feed::builder(keypair.public, storage)
+  //     .secret_key(keypair.secret)
+  //     .build()
+  //     .unwrap();
+  //
+  //   let data = b"abc";
+  //   for &b in data {
+  //     feed.append(&[b]).unwrap();
+  //   }
+  //
+  //   assert_eq!(read_bytes(&dir, Store::Data), data);
+  //   assert_eq!(read_bytes(&dir, Store::Signatures), expected_signatures);
+  //
+  //   remove_dir_all(dir).unwrap()
+  // }
+  unimplemented!();
 }
 
 #[test]
@@ -139,7 +143,7 @@ fn mk_keypair(keypair_bytes: &[u8], public_key: &[u8]) -> Keypair {
   let keypair = Keypair::from_bytes(&keypair_bytes).unwrap();
   assert_eq!(
     keypair.secret.as_bytes().as_ref(),
-    &keypair_bytes[..ed25519_dalek::SECRET_KEY_LENGTH]
+    &keypair_bytes[..redschnorr::SECRET_KEY_LENGTH]
   );
   assert_eq!(keypair.public.as_bytes().as_ref(), public_key);
   keypair
