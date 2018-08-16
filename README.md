@@ -8,7 +8,7 @@ Working with Ristretto allows for some deterministic key derivation schemes that
 
 Consider a decentralized Twitter-like app (checkout [fritter](https://github.com/beakerbrowser/fritter)!), where each user has an identity feed to which they publish public "tweets" (or freets)?
 
-If two peers wished to exchange messages privately, they would have to establish a new pair of shared, secret feeds that only they know about, which would normally have to be done with a handshake.
+If two peers wished to exchange messages privately, they would have to establish a new pair of shared, secret feeds that only they know about, which would normally have to be done with a handshake. (Of course, they could publish encrypted messages to one another on their public feed, but this exposes some information about a user's private messaging behavior).
 
 Using Ristretto, there is a non-interactive, deterministic approach to deriving such a pair of feeds, and as long as both users know of each other's keys, this effectively provides a mechanism for decentralized [push messaging](https://github.com/jayrbolton/dat-wot/issues/7).
 
