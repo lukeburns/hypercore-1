@@ -1,43 +1,26 @@
-# hypercore
-[![crates.io version][1]][2] [![build status][3]][4]
-[![downloads][5]][6] [![docs.rs docs][7]][8]
+# hypercore-red
 
-WIP. Secure, distributed, append-only log structure. Adapted from
-[mafintosh/hypercore](https://github.com/mafintosh/hypercore).
+**Experimental:** This is a fork of the WIP [Rust implementation](https://github.com/datrs/hypercore) of [hypercore](https://github.com/mafintosh/hypercore), a secure and distributed append-only log (with nice properties like sparse-replication). It replaces [ed25519](https://github.com/dalek-cryptography/ed25519-dalek) with an [experimental / insecure implementation](https://github.com/lukeburns/redschnorr) of the Schnorr signature scheme on the [Ristretto prime order group](https://doc.dalek.rs/curve25519_dalek/ristretto/), which has some nice mathematical properties. (Note: this implementation does not produce deterministic signatures like ed25519).
 
-- [Documentation][8]
-- [Crates.io][2]
+Working with Ristretto allows for some deterministic key derivation schemes that could be useful for decentralized identity schemes, e.g. see [dat-wot](https://github.com/jayrbolton/dat-wot).
 
-## Usage
-```rust
-extern crate hypercore;
+## Example
 
-use hypercore::Feed;
-use std::path::PathBuf;
+Consider a decentralized Twitter-like app (checkout [fritter](https://github.com/beakerbrowser/fritter)!), where each user has an identity feed to which they publish public "tweets" (or freets)?
 
-let path = PathBuf::from("./my-first-dataset");
-let mut feed = Feed::new(&path).unwrap();
+If two peers wished to exchange messages privately, they would have to establish a new pair of shared, secret feeds that only they know about, which would normally have to be done with a handshake.
 
-feed.append(b"hello").unwrap();
-feed.append(b"world").unwrap();
+Using Ristretto, there is a non-interactive, deterministic approach to deriving such a pair of feeds, and as long as both users know of each other's keys, this effectively provides a mechanism for decentralized [push messaging](https://github.com/jayrbolton/dat-wot/issues/7).
 
-println!("{:?}", feed.get(0)); // prints "hello"
-println!("{:?}", feed.get(1)); // prints "world"
-```
+Suppose Alice wants to push a message to Bob. Alice can construct a function that takes in hey secret key `a` and Bob's public key `B`, and spits out a secret key `a_to_B`, with associated public key `A_to_B`, and public key `B_to_A`, *such that* using the same function Bob can produce the secret key `b_to_A`, with which he can derive `B_to_A`, and `A_to_B`. Using this pair of keys, Alice and Bob can create an asymmetric pair of relationship feeds that only they know about.
 
-## Installation
-```sh
-$ cargo add hypercore
-```
+If all users derive such a pair of relationship feeds as they encounter peers on the network (or just peers they wish to receive messages from), then this scheme allows for effective push messages, as long as both users are online at the same time, or have an always-on server replicating their feeds.
+
+Alternatively, if hypercore feeds could be replicated blindly, then users could allow (e.g. trusted) peers to replicate their relationship feeds without exposing any information about the other peer, so that messages can be pushed without both peers being online at the same time, as long as their is at least one replicator online.
+
+To implement push messaging without key derivation would require handshakes between all peers, which on networks with intermittent-connectivity could be slow or on large networks prohibitive.
+
+One downside is that, as a deterministic scheme, such relationship feeds derived by a user would be exposed if their secret key were compromised.
 
 ## License
 [MIT](./LICENSE-MIT) OR [Apache-2.0](./LICENSE-APACHE)
-
-[1]: https://img.shields.io/crates/v/hypercore.svg?style=flat-square
-[2]: https://crates.io/crates/hypercore
-[3]: https://img.shields.io/travis/datrs/hypercore.svg?style=flat-square
-[4]: https://travis-ci.org/datrs/hypercore
-[5]: https://img.shields.io/crates/d/hypercore.svg?style=flat-square
-[6]: https://crates.io/crates/hypercore
-[7]: https://docs.rs/hypercore/badge.svg
-[8]: https://docs.rs/hypercore
