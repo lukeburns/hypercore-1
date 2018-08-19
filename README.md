@@ -2,7 +2,7 @@
 
 **Experimental:** This is a fork of the WIP [Rust implementation](https://github.com/datrs/hypercore) of [hypercore](https://github.com/mafintosh/hypercore), a secure and distributed append-only log (with nice properties like sparse-replication). It replaces [ed25519](https://github.com/dalek-cryptography/ed25519-dalek) with an [experimental / insecure implementation](https://github.com/lukeburns/redschnorr) of the Schnorr signature scheme on the [Ristretto prime order group](https://doc.dalek.rs/curve25519_dalek/ristretto/), which has some nice mathematical properties. (Note: this implementation does not produce deterministic signatures like ed25519).
 
-Working with Ristretto allows for some deterministic key derivation schemes that could be useful for decentralized identity schemes, e.g. see [dat-wot](https://github.com/jayrbolton/dat-wot).
+Working with Ristretto allows for some deterministic key derivation schemes that could be useful for decentralized identity schemes, e.g. see [dat-wot](https://github.com/jayrbolton/dat-wot). See [channels](https://github.com/lukeburns/channels) for an implementation of a scheme for deriving public and private channels from existing keypairs.
 
 ## Example
 
@@ -12,7 +12,7 @@ If two peers wished to exchange messages privately, they would have to establish
 
 Using Ristretto, there is a non-interactive, deterministic approach to deriving such a pair of feeds, and as long as both users know of each other's keys, this effectively provides a mechanism for decentralized [push messaging](https://github.com/jayrbolton/dat-wot/issues/7).
 
-Suppose Alice wants to push a message to Bob. Alice can use a function that takes in her secret key `a` and Bob's public key `B`, and spits out a secret key `a_to_B`, with associated public key `A_to_B`, and public key `B_to_A`, *such that* using the same function Bob can produce the secret key `b_to_A`, with which he can derive `B_to_A`, and `A_to_B`. Using this pair of keys, Alice and Bob can create an asymmetric pair of relationship feeds that only they know about. (The reason this cannot be done using ed25519 is that standard implementations perform security-related bit-twiddling that compromises the mathematical integrity of keys).
+Suppose Alice wants to push a message to Bob. Alice can use a function that takes in her secret key `a` and Bob's public key `B`, and spits out a secret key `a_to_B`, with associated public key `A_to_B`, and public key `B_to_A`, *such that* using the same function Bob can produce the secret key `b_to_A`, with which he can derive `B_to_A`, and `A_to_B`. Using this pair of keys, Alice and Bob can create an asymmetric pair of relationship feeds that only they know about. (The reason this cannot be done using ed25519 is that standard implementations perform security-related bit-twiddling that compromises the mathematical integrity of keys). See [channels](https://github.com/lukeburns/channels) for an implementation of this.
 
 If all users derive such a pair of relationship feeds as they encounter peers on the network (or just peers they wish to receive messages from), then this scheme allows for effective push messages, as long as both users are online at the same time, or have an always-on server replicating their feeds.
 
